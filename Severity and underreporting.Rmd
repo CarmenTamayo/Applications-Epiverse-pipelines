@@ -32,7 +32,7 @@ n_static_cfr <- estimate_static(daily_cases_deaths, correct_for_delays = FALSE)
 n_static_cfr
 ```
 
-Static CFR- adjusted estimate, taking ebola onset to death dist from epiparameter, *getting ERROR*:
+Static CFR- adjusted estimate, taking ebola onset to death dist from `epiparameter`, *getting ERROR*:
 
 ```{r}
 onset_to_death_ebola <- epiparameter::epidist_db(
@@ -59,9 +59,7 @@ c_rolling_CFR <- estimate_time_varying(daily_cases_deaths, epi_dist = onset_to_d
 
 ```
 
-
-Plotting CFR
-*There used to be a function `plot_data_and_cfr()` to plot both naive and corrected CFR that generated some nice plots, but now it's been removed?*
+Plotting CFR, *there used to be a function `plot_data_and_cfr()` to plot both naive and corrected CFR that generated some nice plots, but now it's been removed?*
 
 ```{r}
 plot_time_varying(n_rolling_CFR)
