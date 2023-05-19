@@ -1,5 +1,7 @@
 library(readr)
 library(tidyverse)
+library(datadelay)
+library(epiparameter)
 
 #Loading outbreak scenario data from one of the workshop's groups
 Linelist_group3 <- read_csv("Data/Linelist_group3.csv")
@@ -10,6 +12,22 @@ names(daily_cases_deaths)[1:2]=c("date","deaths")
 daily_cases_deaths <- daily_cases_deaths %>% mutate(cases = rep(1, nrow(daily_cases_deaths)), .after = "date")
 daily_cases_deaths$deaths <- ifelse(is.na(daily_cases_deaths$deaths)==T, 0, 1)
 daily_cases_deaths <- aggregate(cbind(cases, deaths) ~ date, data = daily_cases_deaths, FUN = sum)
+
+#Static CFR- naive estimate
+n_static_cfr <- estimate_static(daily_cases_deaths, correct_for_delays = FALSE) # 0.064 (0.04-0.089)
+
+#Static CFR- adjusted estimate
+#Ebola onset to death dist from epiparameter
+onset_to_death_ebola <- epiparameter::epidist_db(
+  disease = "Ebola Virus Disease",
+  epi_dist = "onset_to_death",
+  author = "WHO_Ebola_Response_Team")
+
+c_static_cfr <- estimate_static(daily_cases_deaths, epi_dist = onset_to_death_ebola, correct_for_delays = T)
+
+
+
+
 
 
 
