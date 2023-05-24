@@ -69,7 +69,5 @@ plot_time_varying(n_rolling_CFR)
 plot_time_varying(c_rolling_CFR)
 ```
 
-
-
 *The README on `datadelay` hasn't been updated so the old functions are still there, which is confusing for users*
 
