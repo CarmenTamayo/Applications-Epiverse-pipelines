@@ -1,4 +1,4 @@
-# Case-studies-Epiverse-pipelines
+# Applications-Epiverse-pipelines
 
 Case studies for Epiverse-TRACE pipelines
 So far including the Severity + underreporting and the Transmissibility pipelines
