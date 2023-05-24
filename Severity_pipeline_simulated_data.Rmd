@@ -1,0 +1,12 @@
+---
+title: "Severity pipeline-simulated data"
+output: html_document
+date: "2023-05-24"
+---
+
+```{r setup, include=TRUE}
+Linelist_group3 <- read_csv("Data/Linelist_group3.csv")
+head(Linelist_group3)
+```
+
+Using data from 100-days workshop simulated scenario data, specifically from group 3's scenario
