@@ -4,9 +4,52 @@ output: html_document
 date: "2023-05-24"
 ---
 
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+Epiverse severity (and underreporting) pipeline illustrated with data from 100-days workshop simulated scenario data, specifically from group 3's scenario.
+
 ```{r setup, include=TRUE}
 Linelist_group3 <- read_csv("Data/Linelist_group3.csv")
 head(Linelist_group3)
 ```
 
-Using data from 100-days workshop simulated scenario data, specifically from group 3's scenario
+### Task 1: Identify and correct inconsistencies and errors in the data
+<br>
+The package [linelist](https://github.com/epiverse-trace/linelist) was used to create a `linelist` object through the `make_linelist()` function, which adds tags to df columns, that represent relevant variables in epidemiological analysis. Current tags can be checked using the function `tags()`.
+
+```{r}
+library(linelist)
+linelist_3 <- make_linelist(Linelist_group3, 
+                            id = "case_name", date_onset = "onset_date",
+                            date_reporting = "report_date", 
+                            date_admission = "hospitalisation_date", 
+                            date_death = "death_date", gender = "gender", 
+                            age = "age", location = "island_group", 
+                            occupation = "occupation")
+tags(linelist_3)
+```
+
+The function `validate_linelist()` was used to check that column formats fit the class of the corresponding tags. This is useful to perform checks on the data to ensure that it is in the right format before conducting any further analyses.
+
+_Won't knit when using this function because it generates an error if classes are incorrect_
+
+Multiple errors were detected, and subsequently corrected thanks to this check:
+
+```{r}
+linelist_3$onset_date <- as.Date(linelist_3$onset_date, format = "%Y-%m-%d")
+linelist_3$report_date <- as.Date(linelist_3$report_date, format = "%Y-%m-%d")
+linelist_3$hospitalisation_date <- as.Date(linelist_3$hospitalisation_date, format = "%Y-%m-%d")
+linelist_3$death_date <- as.Date(linelist_3$death_date, format = "%Y-%m-%d")
+linelist_3$gender <- as.character(linelist_3$gender)
+
+validate_linelist(linelist_3)
+```
+
+
+
+
+
+
+
