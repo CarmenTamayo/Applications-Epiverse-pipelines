@@ -8,7 +8,9 @@ date: "2023-05-24"
 library(tidyverse)
 ```
 
-Epiverse severity (and underreporting) pipeline illustrated with data from 100-days workshop simulated scenario data, specifically from group 3's scenario.
+<br>
+
+Epiverse severity (and underreporting) pipeline illustrated with data from 100-days workshop simulated scenario data. 
 
 ```{r setup, include=TRUE}
 Linelist_group3 <- read_csv("Data/Linelist_group3.csv")
@@ -30,6 +32,7 @@ linelist_3 <- make_linelist(Linelist_group3,
                             occupation = "occupation")
 tags(linelist_3)
 ```
+<br>
 
 The function `validate_linelist()` was used to check that column formats fit the class of the corresponding tags. This is useful to perform checks on the data to ensure that it is in the right format before conducting any further analyses.
 
@@ -46,10 +49,24 @@ linelist_3$gender <- as.character(linelist_3$gender)
 
 validate_linelist(linelist_3)
 ```
+<br>
 
+The `lost_tags_action()` was used to determine the message that the user receives when tags are lost in the subsequent steps of the analysis, e.g., when subsetting data. Also, the `get_lost_tags_action()` is used to check which action had been set- which can be changed throughout the analysis.
 
+```{r}
+lost_tags_action("warning")
+get_lost_tags_action()
+```
 
+<br>
 
+The package [cleanepi](https://github.com/epiverse-trace/cleanepi) was used to clean linelist data. This package will include multiple functions, to remove duplicate entries, check IDs and verify that they comply with the expected format, automatically standardise dates, or calculate the age of cases included in the linelist.
 
+_At the moment, it is not possible to use `linelist` tags to remove duplicates across columns, and when using column names it removes all the duplicates by case_id only, which results in most data being deleted_
+
+```{r}
+library(cleanepi)
+linelist3_clean <- cleanepi(linelist_3, remove.duplicates = F, clean.col.names = F)
+```
 
 

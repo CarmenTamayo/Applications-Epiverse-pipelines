@@ -355,9 +355,9 @@ display: none;
 </div>
 
 
+<p><br></p>
 <p>Epiverse severity (and underreporting) pipeline illustrated with data
-from 100-days workshop simulated scenario data, specifically from group
-3’s scenario.</p>
+from 100-days workshop simulated scenario data.</p>
 <pre class="r"><code>Linelist_group3 &lt;- read_csv(&quot;Data/Linelist_group3.csv&quot;)</code></pre>
 <pre><code>## Rows: 553 Columns: 13
 ## ── Column specification ────────────────────────────────────────────────────────
@@ -424,6 +424,7 @@ tags(linelist_3)</code></pre>
 ## 
 ## $occupation
 ## [1] &quot;occupation&quot;</code></pre>
+<p><br></p>
 <p>The function <code>validate_linelist()</code> was used to check that
 column formats fit the class of the corresponding tags. This is useful
 to perform checks on the data to ensure that it is in the right format
@@ -460,6 +461,28 @@ validate_linelist(linelist_3)</code></pre>
 ## #   occupation &lt;chr&gt;
 ## 
 ## // tags: id:case_name, date_onset:onset_date, date_reporting:report_date, date_admission:hospitalisation_date, date_death:death_date, gender:gender, age:age, location:island_group, occupation:occupation</code></pre>
+<p><br></p>
+<p>The <code>lost_tags_action()</code> was used to determine the message
+that the user receives when tags are lost in the subsequent steps of the
+analysis, e.g., when subsetting data. Also, the
+<code>get_lost_tags_action()</code> is used to check which action had
+been set- which can be changed throughout the analysis.</p>
+<pre class="r"><code>lost_tags_action(&quot;warning&quot;)</code></pre>
+<pre><code>## Lost tags will now issue a warning.</code></pre>
+<pre class="r"><code>get_lost_tags_action()</code></pre>
+<pre><code>## [1] &quot;warning&quot;</code></pre>
+<p><br></p>
+<p>The package <a href="https://github.com/epiverse-trace/cleanepi">cleanepi</a> was used
+to clean linelist data. This package will include multiple functions, to
+remove duplicate entries, check IDs and verify that they comply with the
+expected format, automatically standardise dates, or calculate the age
+of cases included in the linelist.</p>
+<p><em>At the moment, it is not possible to use <code>linelist</code>
+tags to remove duplicates across columns, and when using column names it
+removes all the duplicates by case_id only, which results in most data
+being deleted</em></p>
+<pre class="r"><code>library(cleanepi)
+linelist3_clean &lt;- cleanepi(linelist_3, remove.duplicates = F, clean.col.names = F)</code></pre>
 </div>
 
 
