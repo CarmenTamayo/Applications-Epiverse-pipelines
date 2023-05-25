@@ -69,4 +69,21 @@ library(cleanepi)
 linelist3_clean <- cleanepi(linelist_3, remove.duplicates = F, clean.col.names = F)
 ```
 
+<br>
+
+## Task 2: What is the CFR?
+<br>
+In this section, the packages [datadelay](https://github.com/epiverse-trace/datadelay), [epiparameter](https://github.com/epiverse-trace/epiparameter), and [quickfit](https://github.com/epiverse-trace/quickfit) are used to estimate the case fatality rate of disease, while correcting the calculation to account for censoring of cases.
+
+
+
+
+
+
+
+
+
+
+
+
 
