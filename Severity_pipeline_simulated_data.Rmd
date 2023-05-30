@@ -75,9 +75,33 @@ linelist3_clean <- cleanepi(linelist_3, remove.duplicates = F, clean.col.names =
 <br>
 In this section, the packages [datadelay](https://github.com/epiverse-trace/datadelay), [epiparameter](https://github.com/epiverse-trace/epiparameter), and [quickfit](https://github.com/epiverse-trace/quickfit) are used to estimate the case fatality rate of disease, while correcting the calculation to account for censoring of cases.
 
+<br>
+
+```{r, echo=FALSE, out.width="80%"}
+knitr::include_graphics('images/Severity and underreporting pipeline.png')
+```
+<br>
+
+To be able to use `datadelay`, it is necessary to first format the data as a dataframe with the number of cases, deaths, and dates of death, for which the package `incidence2` was used.
+
+```{r}
+library(incidence2)
+incidence_g3 <- incidence2::incidence(linelist_3,"onset_date")
+deaths_g3 <- incidence2::incidence(linelist_3,"death_date")
+
+```
+
+```{r}
+
+```
 
 
 
+```{r}
+cases_deaths2 <- Linelist_group3[,c(6,8)]
+names(cases_deaths2)[1:2] = c("date","deaths")
+cases_deaths2 <- cases_deaths2 %>% mutate(cases = rep(1, nrow(cases_deaths2)), .after = "date")
+```
 
 
 
