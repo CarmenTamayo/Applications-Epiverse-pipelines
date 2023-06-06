@@ -67,16 +67,12 @@ get_lost_tags_action()
 
 The package [cleanepi](https://github.com/epiverse-trace/cleanepi) was used to clean linelist data. This package will include multiple functions, to remove duplicate entries, check IDs and verify that they comply with the expected format, automatically standardise dates, or calculate the age of cases included in the linelist.
 
-_At the moment, it is not possible to use `linelist` tags to remove duplicates across columns, and when using column names it removes all the duplicates by case_id only, which results in most data being deleted_
-
-
+_At the moment, it is not possible to use `linelist` tags to remove duplicates across columns_
 
 ```{r}
 library(cleanepi)
-linelist3_clean <- cleanepi(linelist_3, remove.duplicates = F, clean.col.names = F)
+linelist3_clean <- cleanepi(linelist_3, remove.duplicates = T, duplicates.from = c("case_name","ct_value","age","hospitalisation_date","date_first_contact","report_date","occupation","case_type","gender","onset_date","death_date","date_last_contact","island_group"), clean.col.names = T)
 ```
-
-
 
 <br>
 
