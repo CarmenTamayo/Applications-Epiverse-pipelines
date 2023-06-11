@@ -95,34 +95,35 @@ _Issue raised on `datadelay` to facilitate the input of data so that users don't
 
 ```{r}
 library(incidence2)
-daily_cases_deaths <- incidence2::incidence(Linelist_group3,c("onset_date","death_date")) |> complete_dates()
+daily_cases_deaths <- incidence2::incidence(linelist3_clean,c("onset_date","death_date")) |> complete_dates()
 daily_cases_deaths <- pivot_wider(daily_cases_deaths, names_from = count_variable, values_from = count)
 names(daily_cases_deaths)[2:3]=c("deaths","cases")
 daily_cases_deaths <- daily_cases_deaths[c(1,3,2)]
-daily_cases_deaths$date_index <- as.Date(daily_cases_deaths$date_index)
 daily_cases_deaths <- as.data.frame(daily_cases_deaths)
-```
+#Adding location
+daily_cases_deaths$location <- "Philippines"
 
-```{r}
-daily_cases_deaths <- incidence2::incidence(linelist_3,c("onset_date","death_date"), groups = "island_group") |> complete_dates()
-daily_cases_deaths <- pivot_wider(daily_cases_deaths, names_from = count_variable, values_from = count)
-daily_cases_deaths <- daily_cases_deaths[c(1,4,3,2)]
-names(daily_cases_deaths)[2:3]=c("cases","deaths")
-daily_cases_deaths$date_index <- as.Date(daily_cases_deaths$date_index)
-daily_cases_deaths <- as.data.frame(daily_cases_deaths)
 ```
 
 <br>
 
-The function `estimate_static()` was used to estimate the overall value of the CFR in this scenario. The argument `correct = TRUE/FALSE` allows the user to correct the CFR estimation, based on the distribution of the onset-death delay. 
-On the following example, this function is used to estimate the naive and the corrected CFR, the latter by importing the onset-death distribution for Ebola from the `epiparameter` package:
+The function `estimate_static()` was used to estimate the overall value of the CFR in this scenario. The argument `correct = TRUE/FALSE` allows the user to correct the CFR estimation, based on the distribution of the onset-death delay. The function `format_output()` provides a nicely formatted summary of the CFR value and its 95% CI.
+On the following example, these functions are first used to estimate the naive CFR:
 
 ```{r}
 library(datadelay)
-library(epiparameter)
-
 # Naive, static CFR:
-n_static_CFR <- estimate_static(daily_cases_deaths, correct_for_delays = F, location = "island_group")
+n_static_CFR <- estimate_static(daily_cases_deaths, correct_for_delays = F, location = "location")
+format_output(n_static_CFR, estimate_type = "severity")
+
+```
+<br>
+
+The corrected overall CFR was calculated by importing the onset-death delay distribution for Ebola from the `epiparameter` package: 
+
+
+```{r}
+library(epiparameter)
 
 # Loading delay distribution:
 onset_to_death_ebola <- epiparameter::epidist_db(
@@ -131,12 +132,159 @@ onset_to_death_ebola <- epiparameter::epidist_db(
   author = "WHO_Ebola_Response_Team")
 
 # Corrected, static CFR:
-c_static_CFR <- estimate_static(daily_cases_deaths, epi_dist = onset_to_death_ebola, correct_for_delays = T, location = "island_group")
+c_static_CFR <- estimate_static(daily_cases_deaths, epi_dist = onset_to_death_ebola, correct_for_delays = T, location = "location")
 
 format_output(c_static_CFR, estimate_type = "severity")
 ```
+<br>
 
-_Q: can the location be specified so the CFR is shown in different areas?_
+_The `estimate_static` function can also be used to compare the CFR estimates in different areas when the input dataset has the death counts per day and also per affected region_ <- not true at the moment
+
+```{r}
+daily_cases_deaths_location <- incidence2::incidence(linelist3_clean,c("onset_date","death_date"), groups = "island_group") |> complete_dates()
+daily_cases_deaths_location <- pivot_wider(daily_cases_deaths_location, names_from = count_variable, values_from = count)
+daily_cases_deaths_location <- daily_cases_deaths_location[c(1,4,3,2)]
+names(daily_cases_deaths_location)[2:3]=c("cases","deaths")
+#daily_cases_deaths_location <- as.data.frame(daily_cases_deaths_location)
+```
+
+```{r}
+n_static_CFR_region <- estimate_static(daily_cases_deaths_location, correct_for_delays = F, location = "island_group")
+format_output(n_static_CFR_region, estimate_type = "severity")
+```
+<br>
+
+The function `estimate_time_varying()` provides an estimation of the CFR over time. Similarly to the example above, this estimation can be naive or corrected. 
+
+_Further, the function `plot_data_and_CFR()` helps to easily visualise the data along with the estimated CFR: <Is this function gone??_
+
+```{r}
+n_rolling_CFR <- estimate_time_varying(daily_cases_deaths, epi_dist = onset_to_death_ebola, correct_for_delays = FALSE)
+
+c_rolling_CRF <- estimate_time_varying(daily_cases_deaths, epi_dist = onset_to_death_ebola, correct_for_delays = T)
+
+plot_time_varying(c_rolling_CRF)
+```
+<br>
+
+Because the disease in this scenario is Reston Ebolavirus, a pathogen that (to our knowledge) does not affect humans, another option is to fit a distribution to the data ourselves, as there are no estimates for this variant in humans. This is applicable to any other emerging disease. In the following example, `fitdistrplus` and `quickfit` were used to fit a probability distribution to the onset-death delay, so that in can be used in the corrected CFR estimation.
+
+First, data was formatted and a histogram was produced to visualise the distribution of deaths:
+
+```{r}
+onset_to_death <- linelist3_clean[,c(6,8)]
+onset_to_death <- na.omit(onset_to_death)
+delay_onset_death <- as.numeric(onset_to_death$death_date - onset_to_death$onset_date)
+hist(delay_onset_death)
+```
+<br>
+
+Then, different distributions were fitted and compared:
+
+```{r}
+library(fitdistrplus)
+
+fit_lnorm_od <- fitdist(delay_onset_death, "lnorm")
+fit_gamma_od <- fitdist(delay_onset_death, "gamma")
+fit_weibull_od <- fitdist(delay_onset_death, "weibull")
+
+#Comparing AIC and BIC
+fit_comparison_od <- data.frame(distribution = c("Weibull", "Gamma", "Lognormal"),
+  AIC = c(fit_weibull_od$aic, fit_gamma_od$aic, fit_lnorm_od$aic),
+  BIC = c(fit_weibull_od$bic, fit_gamma_od$bic, fit_lnorm_od$bic))
+
+fit_comparison_od
+```
+
+To compare the fit of probability distributions, the function `multfitdist()`, from `quickfit` can also be used, which provides the AIC, BIC, and the log-likelihood:
+
+```{r}
+library(quickfit)
+multi_fitdist(
+  data = delay_onset_death, 
+  models = c("lnorm", "gamma", "weibull"))
+
+```
+<br>
+
+Next, this distribution was converted to an `epidist` object, so that it could be used with `datadelay`'s functions. This involved using the function `extract_param()` to extract the distribution's parameters. These parameters, along with the summary statistics of the scenario data, are used to create an `epidist` object with the function `epidist()`:
+
+```{r}
+library(epiparameter)
+
+summary(delay_onset_death)
+extract_param(
+  type = "percentiles",
+  values = c(12, 21.75),
+  distribution = "lnorm",
+  percentiles = c(0.25, 0.75)) #values- meanlog: 2.78, sdlog: 0.44
+
+summary_stats <- create_epidist_summary_stats(mean = 19.43, median = 18.5, quantiles = c(q_25=12,q_75=21.75))
+
+restonebv_o_d <- epidist(disease = "ebola", pathogen = "reston_ebv", 
+                 epi_dist = "onset_to_death", prob_distribution = "lnorm",
+                 prob_distribution_params = c(meanlog=2.78, sdlog=0.44),
+                 summary_stats = summary_stats)
+```
+<br>
+
+Lastly, the CFR was recalculated using `datadelay` with custom distribution parameters:
+
+```{r}
+rEbv_rolling_CFR <- estimate_time_varying(daily_cases_deaths, correct_for_delays = T, epi_dist = restonebv_o_d)
+
+plot_time_varying(rEbv_rolling_CFR)
+```
+<br>
+
+### Task 3: Estimation of proportion of ascertained cases
+
+The function `known_outcomes()` from `datadelay` allows the user to estimate the expected number of individuals with known outcomes, given the case and death data collected during an outbreak.
+
+_What does the outcome mean? what is the number in the new column, expected no. of cases with known outcomes??_
+
+_How does the known_outcomes() function fit with the estimate_underreporting() function?_
+
+```{r}
+ebola_known_outcomes <- known_outcomes(daily_cases_deaths, epi_dist = onset_to_death_ebola)
+
+plot_known_outcomes(ebola_known_outcomes)
+```
+<br>
+
+The function `estimate_underreporting()` estimates the proportion of cases that have been ascertained. This proportion is calculated as the ratio of the "true" baseline severity estimate (e.g., obtained from the literature), and the delay-adjusted severity estimate (obtained using the functions `estimate_static()` and `estimate_time_varying()`)
+
+For this simulated scenario, we will assume a baseline CFR of 4%.
+
+_For the argument "severity baseline" clarify whether this is just the number or divided by 100_
+
+```{r}
+ebola_reporting_static <- estimate_reporting(daily_cases_deaths, epi_dist = onset_to_death_ebola, type = "static", severity_baseline = 0.04, correct_for_delays = F) 
+format_output(ebola_reporting_static, estimate_type = "reporting", type ="Under-reporting")
+```
+<br>
+
+Then, estimating the proportion of ascertained cases over time:
+
+_In the vignette, the format of the df_in for this function is a linelist, not cases-deaths counts_
+
+```{r}
+ebola_reporting_rolling <- estimate_reporting(
+  linelist3_clean, 
+  epi_dist = onset_to_death_ebola, 
+  type = "varying", 
+  severity_baseline = 0.04, 
+  correct_for_delays = T, 
+  smooth_inputs = T, 
+  burn_in_value = 7) 
+
+format_output(ebola_reporting_rolling, estimate_type = "reporting", type ="Ascertainment")
+```
+
+
+
+
+
 
 
 
