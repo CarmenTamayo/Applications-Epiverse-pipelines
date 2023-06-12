@@ -45,7 +45,6 @@ Now, adding dates for the known deaths, based on the reported delay between onse
 
 _How to distinguish recovered vs unknown status_
 
-
 ```{r}
 MVD_linelist$Death_week <- MVD_linelist$Onset_week
 MVD_linelist$Death_week <- as.Date(ifelse(MVD_linelist$Status == "unknown"|MVD_linelist$Status == "recovered", NA, MVD_linelist$Death_week))
@@ -60,19 +59,18 @@ MVD_cases_deaths <- MVD_cases_deaths[c(1,3,2)]
 MVD_cases_deaths <- as.data.frame(MVD_cases_deaths)
 ```
 
-could estimate how many cases had known outcomes in real-time, then use the proportion who died so far to estimate under-reporting. Looks like outbreak data now more complete, so ‘easier’ to calculate CFR (because most have known outcomes, so don’t need onset dates – can just calculate ratio directly, like lines 1-34 here
-
-
-
-
-
 ```{r}
 library(epiparameter)
-extract_param(type = "range", values = c(8, 2, 16), distribution = "gamma", samples = 77)
-Marburg_onset_death <- epidist(disease = "marburg", epi_dist = "onset_to_death")
+set.seed(1)
+extract_param(type = "range", values = c(8, 2, 16), distribution = "gamma", samples = 77) #2.095 and 4.513
+Marburg_onset_death <- epidist(disease = "marburg", epi_dist = "onset_to_death", prob_distribution = "gamma", prob_distribution_params = c(shape=2.095, scale=4.513))
+
+known_outcomes_MVD <- known_outcomes(MVD_cases_deaths, Marburg_onset_death)
+
+plot_known_outcomes(known_outcomes_MVD)
 
 ```
-known outcomes
+
 
 
 
