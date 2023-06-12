@@ -46,7 +46,7 @@ Now, adding dates for the known deaths, based on the reported delay between onse
 _How to distinguish recovered vs unknown status_
 
 ```{r}
-MVD_linelist$Death_week <- MVD_linelist$Onset_week
+MVD_linelist$Death_week <- MVD_linelist$Onset_week + 8
 MVD_linelist$Death_week <- as.Date(ifelse(MVD_linelist$Status == "unknown"|MVD_linelist$Status == "recovered", NA, MVD_linelist$Death_week))
 ```
 
