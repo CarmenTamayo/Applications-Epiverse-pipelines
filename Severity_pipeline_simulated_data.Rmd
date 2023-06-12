@@ -270,13 +270,13 @@ _In the vignette, the format of the df_in for this function is a linelist, not c
 
 ```{r}
 ebola_reporting_rolling <- estimate_reporting(
-  linelist3_clean, 
+  daily_cases_deaths, 
   epi_dist = onset_to_death_ebola, 
   type = "varying", 
   severity_baseline = 0.04, 
   correct_for_delays = T, 
   smooth_inputs = T, 
-  burn_in_value = 7) 
+  burn_in_value = 0) 
 
 format_output(ebola_reporting_rolling, estimate_type = "reporting", type ="Ascertainment")
 ```
