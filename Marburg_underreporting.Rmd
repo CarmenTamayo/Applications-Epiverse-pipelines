@@ -8,12 +8,71 @@ date: "2023-06-12"
 
 Loading the data
 
+```{r, include=FALSE}
+library(tidyverse)
+```
+
 ```{r}
 MVD_linelist <- read_csv("Data/Marburg_EqGuinea_linelist.csv")
 head(MVD_linelist)
 ```
 
-could estimate how many cases had known outcomes in real-time, then use the proportion who died so far to estimate under-reporting. Looks like outbreak data now more complete, so ‘easier’ to calculate CFR (because most have known outcomes, so don’t need onset dates – can just calculate ratio directly, like lines 1-34 here:
+The data from the Marburg outbreak that took place in Equatorial Guinea from December 2022 until April 2023 includes the case type (probable vs confirmed), the status of the case (recovered/dead/unknown), the week of illness onset, and, for some of the cases, information about their gender, age, occupation, and relation to other outbreak cases.
+
+_Question: can `datadelay` use weeks as input rather than days?_
+
+Given the lack of active surveillance and contact tracing, it is likely that only the most severe cases (which would most likely result in death) were detected and counted. Therefore, it is likely that a proportion of the outbreak cases have not been ascertained.
+
+Because of the lack of death dates, it is not possible to estimate the time-varying CFR, but it is possible to use the information from cases with known outcomes to calculate the static CFR, and then use this to estimate the proportion of cases that are being missed.
+
+```{r}
+MVD_linelist %>% summarise(total_cases = length(Onset_week)) #40 cases
+MVD_linelist %>% filter(Type == "confirmed") %>% summarise(total_cases = length(Onset_week)) #17 confirmed
+MVD_linelist %>% filter(Status == "dead") %>% summarise(total_deaths = length(Onset_week)) #35 deaths
+MVD_linelist %>% filter(Status == "dead" & Type == "confirmed") %>% summarise(total_deaths = length(Onset_week)) #12 deaths among confirmed cases
+
+35/40 #CFR=87.5% among total cases
+12/17 #CFR=70.5% among confirmed cases
+```
+
+The overall CFR is 87.5%. From a systematic review by [Nyakarahuka](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-016-2045-6), we assume that the baseline CFR is 61%. Thus, the proportion of ascertained cases is:
+
+```{r}
+61/87.5 
+```
+
+Now, adding dates for the known deaths, based on the reported delay between onset-death of 8-9 days by [WHO](https://www.who.int/news-room/fact-sheets/detail/marburg-virus-disease):
+
+_How to distinguish recovered vs unknown status_
+
+
+```{r}
+MVD_linelist$Death_week <- MVD_linelist$Onset_week
+MVD_linelist$Death_week <- as.Date(ifelse(MVD_linelist$Status == "unknown"|MVD_linelist$Status == "recovered", NA, MVD_linelist$Death_week))
+```
+
+```{r}
+library(incidence2)
+MVD_cases_deaths <- incidence2::incidence(MVD_linelist,c("Onset_week","Death_week")) |> complete_dates()
+MVD_cases_deaths <- pivot_wider(MVD_cases_deaths, names_from = count_variable, values_from = count)
+names(MVD_cases_deaths)[2:3]=c("deaths","cases")
+MVD_cases_deaths <- MVD_cases_deaths[c(1,3,2)]
+MVD_cases_deaths <- as.data.frame(MVD_cases_deaths)
+```
+
+could estimate how many cases had known outcomes in real-time, then use the proportion who died so far to estimate under-reporting. Looks like outbreak data now more complete, so ‘easier’ to calculate CFR (because most have known outcomes, so don’t need onset dates – can just calculate ratio directly, like lines 1-34 here
+
+
+
+
+
+```{r}
+library(epiparameter)
+extract_param(type = "range", values = c(8, 2, 16), distribution = "gamma", samples = 77)
+Marburg_onset_death <- epidist(disease = "marburg", epi_dist = "onset_to_death")
+
+```
+known outcomes
 
 
 
