@@ -259,23 +259,6 @@ onset_to_death_logsd <- EpiNow2::convert_to_logsd(
 data_epinow2 <- df_ebola_subset |> rename(primary = cases, secondary = deaths)
 
 # Estimate CFR
-cases_to_deaths <- EpiNow2::estimate_secondary(
-  data_epinow2,
-  delays = delay_opts(list(
-    mean = onset_to_death_logmean,
-    mean_sd = 0.1,
-    sd = onset_to_death_logsd,
-    sd_sd = 0.1,
-    max = 21)
-  ),
-  secondary = secondary_opts(type = "incidence"),
-  obs = obs_opts(
-    scale = list(mean = 0.5, sd = 10),
-    family = "poisson",
-    week_effect = FALSE
-  ),
-  verbose = FALSE
-)
 
 delay <- dist_spec(mean = onset_to_death_logmean,
     mean_sd = 0.1,
