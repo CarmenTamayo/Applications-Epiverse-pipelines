@@ -271,7 +271,7 @@ onset_to_death_logsd <- EpiNow2::convert_to_logsd(
 # Estimate CFR - remove EpiNow example for now
 # cases_to_deaths <- EpiNow2::estimate_secondary(
 #   data_epinow2,
-#   delays = delay_opts(list(
+#   delays = delay_opts(dist_spec(
 #     mean = onset_to_death_logmean,
 #     mean_sd = 0.1,
 #     sd = onset_to_death_logsd,
