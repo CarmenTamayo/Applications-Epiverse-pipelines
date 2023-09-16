@@ -42,6 +42,8 @@ In real-time, different data streams are available to calculate severity. The tw
 
 A key challenge when calculating severity is that in the middle of an outbreak, people may have recently been diagnosed with the disease, but not yet had an outcome, i.e. the delay from onset to death means it is not yet known whether they will recover or die. To calculate severity such as CFR = deaths/cases, we therefore need to consider deaths among those cases who have a known outcome (or we have estimated to have a known outcome), rather than all cases, to avoid underestimating the CFR.
 
+This document illustrates how to estimate the severity of disease depending on the type of data that is available to the user, using the `cfr` package, as well as other relevant packages, by including case studies that use real outbreak data.
+
 ### 1. From linelist with known outcomes
 
 If we have line list data with cases and outcome (i.e. death/recovery/unknown) for individuals, we can simply extract those who have a known outcome and run the CFR calculation on these individuals. This implicitly assumes the delay from onset-to-outcome is independent of outcome (i.e. delay to death and recovery the same), which means individual-level data conditioned on known outcome won't need further adjustment, even if some outcomes are not yet known, because the ratio of deaths to cases is unbiased if onset-to-death and onset-to-recovery follow the same distribution.
@@ -53,10 +55,13 @@ We compiled data from the Marburg outbreak that took place in Equatorial Guinea 
 We calculated total cases/deaths, and confirmed cases/deaths, then estimate CFR with a simple binomial calculation.
 
 ```{r}
-total_cases <- MVD_linelist %>% summarise(total_cases = length(Onset_week)) 
-total_confirmed_cases <- MVD_linelist %>% filter(Type == "confirmed") %>% summarise(total_cases = length(Onset_week)) 
-total_deaths <- MVD_linelist %>% filter(Status == "dead") %>% summarise(total_deaths = length(Onset_week))
-total_confirmed_deaths <- MVD_linelist %>% filter(Status == "dead" & Type == "confirmed") %>% summarise(total_deaths = length(Onset_week)) 
+total_MVD_cases <- MVD_linelist %>% summarise(total_cases = length(Onset_week)) 
+
+total_MVD_confirmed_cases <- MVD_linelist %>% filter(Type == "confirmed") %>% summarise(total_cases = length(Onset_week)) 
+
+total_MVD_deaths <- MVD_linelist %>% filter(Status == "dead") %>% summarise(total_deaths = length(Onset_week))
+
+total_MVD_confirmed_deaths <- MVD_linelist %>% filter(Status == "dead" & Type == "confirmed") %>% summarise(total_deaths = length(Onset_week)) 
 
 # Define binomial confidence interval function:
 ci_text<-function(x,n){
@@ -65,10 +70,10 @@ ci_text<-function(x,n){
 }
 
 # CFR among total cases
-ci_text(total_deaths,total_cases)
+ci_text(total_MVD_deaths, total_MVD_cases)
 
 # CFR among confirmed cases
-ci_text(total_confirmed_deaths,total_confirmed_cases)
+ci_text(total_MVD_confirmed_deaths,total_MVD_confirmed_cases)
 ```
 
 Because of the lack of death dates in the line list, it was not possible to estimate the time-varying CFR, but it was possible to use the information from cases with known outcomes to calculate a single overall CFR.
@@ -83,12 +88,12 @@ data_ebola <- ebola_linelist_2022 |> mutate(Date_case = as.Date(ifelse(!is.na(Da
 data_outcome <- data_ebola |>  filter(!is.na(Date_Death) | !is.na(Date_Recovered))
 
 # Calculate CFR
-total_deaths_ebola <- sum(!is.na(data_outcome$Date_Death))
-total_cases_ebola <- nrow(data_outcome)
-ci_text(total_deaths_ebola,total_cases_ebola)
+total_ebola_deaths <- sum(!is.na(data_outcome$Date_Death))
+total_ebola_cases <- nrow(data_outcome)
+ci_text(total_ebola_deaths,total_ebola_cases)
 ```
 
-### Estimating underascertainment of cases
+### Estimating ascertainment of cases
 
 During an outbreak, it is likely that the most severe cases (which would most likely result in death) will be detected and reported, but a proportion of the outbreak cases will not be ascertained.
 
@@ -103,9 +108,12 @@ tCFR = deaths/cases
 then the proportion of ascertained cases, _p_ = tCFR/oCFR.
 
 #### Case study: Marburg in Equatorial Guinea, 2023
-For Marburg, the overall CFR calculated above was 88%. Based on a systematic review by [Nyakarahuka et al](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-016-2045-6), we assume that the 'true' CFR for Marburg is 65% (95% CI: 54-75%).
+
+For Marburg disease, the overall CFR calculated above was 88%. 
+Based on a systematic review by [Nyakarahuka et al](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-016-2045-6), we assume that the 'true' CFR for Marburg is 65% (95% CI: 54-75%).
 
 We can then estimate _p_ = tCFR/oCFR as
+
 ```{r}
 65/as.numeric(total_deaths/total_cases)
 ```
@@ -114,20 +122,21 @@ _XX Need to consider how to extract normal distribution from CFR (update epipara
 
 #### Case study: Ebola in Uganda, 2022
 
+For ebola, the overall CFR calculated above was 49%. 
 Based on analysis of a well documented 2001 Uganda outbreak by [Omaswa et al](https://www.thelancet.com/journals/langlo/article/PIIS2214-109X(15)70148-8/fulltext), we assume the 'true' CFR is 53% (48-58%).
 
 We can then estimate _p_ = tCFR/oCFR as
 ```{r}
-53/as.numeric(total_deaths_ebola/total_cases_ebola)
+53/as.numeric(total_ebola_deaths/total_ebola_cases)
 ```
 
-Because p is greater than 100%, it suggests little underascertainment relative to the 2001 outbreak.
+Because _p_ is greater than 100%, it suggests little underascertainment relative to the 2001 outbreak.
 
 ### 2. From case timeseries when number of onsets known but only total deaths
 
 It may be the situation that case onset dates are known, but dates of death are not reported (e.g. in a situation report). This means we must estimate the proportion of cases with a known outcome to perform the CFR calculation.
 
-First, we can use the `extract_param` function in epiparameter to estimate the Marburg onset-to-death delay and store this as an epidist object.
+First, we can use the `extract_param` function in epiparameter to estimate the Marburg onset-to-death delay and store this as an epidist object. Data from [Colebunders et al](https://pubmed.ncbi.nlm.nih.gov/17940943/) was used in this example:
 
 ```{r}
 set.seed(1)
@@ -136,7 +145,7 @@ marburg_onset_death <- epidist(disease = "marburg", epi_dist = "onset_to_death",
 plot(marburg_onset_death)
 ```
 
-Suppose hypothetically we had a scenario where by 1st March 2023, 18 deaths had been reported in the outbreak. We can therefore use `known_outcomes` in cfr to estimate the number of cases that have a known outcome by this point, and compare with a 'naive' estimate that doesn't account for delays.
+Suppose hypothetically we had a scenario where by 1st March 2023, 18 deaths had been reported in the outbreak. We can therefore use the `known_outcomes()` function from `cfr` to estimate the number of cases that have a known outcome by this point, and compare with a 'naive' estimate that doesn't account for delays.
 
 ```{r}
 cut_off <- as.Date("2023-03-01") # date to analyse up to in real-time
@@ -148,9 +157,13 @@ MVD_linelist_cut$Death_week <- MVD_linelist_cut$Onset_week
 
 # Convert to incidence
 MVD_cases_deaths <- incidence2::incidence(MVD_linelist_cut,c("Onset_week","Death_week")) |> complete_dates()
+# Pivot table
 MVD_cases_deaths <- pivot_wider(MVD_cases_deaths, names_from = count_variable, values_from = count)
+# Change column names for function
 names(MVD_cases_deaths) <- c("date_index","deaths","cases")
-MVD_cases_deaths <- MVD_cases_deaths[,c("date_index","cases","deaths")] # Reorder for function
+# Reorder for function
+MVD_cases_deaths <- MVD_cases_deaths[,c("date_index","cases","deaths")]
+# Convert to data frame
 MVD_cases_deaths <- as.data.frame(MVD_cases_deaths)
   
 MVD_cases_deaths |> filter(date_index<cut_off)
@@ -177,7 +190,8 @@ _XX Need to consider how `cfr` can use weeks as input rather than days XX _
 
 If we have the full incidence data for of cases and deaths available, we can also use `cfr` to estimate the CFR, adjusting for delay from onset to outcome. An example with the 1976 Ebola dataset is reported in the [cfr vignette](https://epiverse-trace.github.io/cfr/articles/estimate_static_severity.html), but here we show how this method performs against the 'ground truth' of subsequent known outcomes in the line list, as well as an alternative estimation method based on `EpiNow2`.
 
-First, we load the development version of EpiNow2, which allows estimation of the proportion of infection events with a given characteristic (i.e. fatal outcome) at a given delay. We also define the Ebola onset-to-death using epiparameter:
+First, we load the development version of `EpiNow2`, which allows estimation of the proportion of infection events with a given characteristic (i.e. fatal outcome) at a given delay. We also define the Ebola onset-to-death using `epiparameter`:
+
 ```{r}
 pak::pak("epiforecasts/EpiNow2")
 library(EpiNow2)
@@ -188,7 +202,10 @@ onset_to_death_ebola <- epiparameter::epidist_db(
   author = "Barry_etal")
 ```
 
-First we estimate the CFR based on the line list data up to 5th October 1976. We perform two calculations: 1) Estimate CFR based only on cases with known outcomes up to this date. 2) Estimate a 'ground truth' CFR with the benefit of hindsight by following up all cases that had onsets prior to this date, but outcomes that were not necessarily known by 5th October:
+First we estimate the CFR based on the line list data up to 5th October 1976. We perform two calculations: 
+1) Estimate CFR based only on cases with known outcomes up to this date. 
+2) Estimate a 'ground truth' CFR with the benefit of hindsight by following up all cases that had onsets prior to this date, but outcomes that were not necessarily known by 5th October:
+
 ```{r}
 cut_off <- as.Date("1976-10-05") # date to analyse up to in real-time
 
@@ -221,21 +238,19 @@ data_ebola_ts[is.na(data_ebola_ts)] <- 0 # replace NA with zero counts
 df_ebola_subset <- subset(data_ebola_ts, date <= cut_off)
 ```
 
-We then estimate the overall CFR with cfr and EpiNow2, with and without adjusting for delays:
+We then estimate the overall CFR with `cfr` and `EpiNow2`, with and without adjusting for delays:
 
 ```{r}
 # Calculate real-time overall CFR with cfr, without adjusting for delays
 dt_ncfr_static_ebola <- estimate_static(
   df_ebola_subset,
-  correct_for_delays = FALSE) |> 
-  format_output(estimate_type = "severity",type = "Naive")
+  correct_for_delays = FALSE)
 
 # Calculate real-time overall CFR with cfr, adjusting for delays
 dt_ccfr_static_ebola <- estimate_static(
   df_ebola_subset,
   correct_for_delays = TRUE,
-  epi_dist = onset_to_death_ebola) |>
-  format_output(estimate_type = "severity",type = "Corrected")
+  epi_dist = onset_to_death_ebola)
 
 # - - -
 # Fit with EpiNow2
@@ -294,19 +309,17 @@ tibble(cfr = cfr_samples) |>
 dt_epinow2 <- 100*quantile(cfr_samples, c(0.5, 0.025, 0.975)) |> signif(3)
 dt_ccfr_static_ebola_epinow2 <- paste0(dt_epinow2[1],"% (95% CI: ",dt_epinow2[2],"-",dt_epinow2[3],")")
 
-``
+```
 
 Finally, we collate the above estimates and compare them:
 
 ```{r}
 # Compare line list, cfr and EpiNow2 estimates for CFR:
-dt_static_clean_ebola <- rbind(c(dt_ncfr_static_ebola$Estimate,"naive incidence calculation"),
-                               c(dt_ccfr_static_ebola$Estimate,"cfr adjusted estimate"),
-                               c(dt_ccfr_static_ebola_epinow2,"EpiNow2 estimate"),
+dt_static_clean_ebola <- rbind(c(dt_ncfr_static_ebola$severity_me,"naive incidence calculation"),                    c(dt_ccfr_static_ebola$severity_me,"cfr adjusted estimate"),                               c(dt_ccfr_static_ebola_epinow2,"EpiNow2 estimate"),
                                c(CFR_binomial_RT_ll,"Based on known line list outcomes in real-time"),
-                               c(CFR_binomial_ll_true,"Based on subsequent known line list outcomes of real-time onsets (i.e. ground truth)")
-                               )
+                               c(CFR_binomial_ll_true,"Based on subsequent known line list outcomes of real-time onsets (i.e. ground truth)"))
 
 dt_static_clean_ebola
+
 ```
 
