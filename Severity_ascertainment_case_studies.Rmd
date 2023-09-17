@@ -13,12 +13,12 @@ library(tidyverse)
 library(incidence2)
 
 # Load cfr from GitHub
-if(!require("pak")){install.packages("pak")}
-pak::pak("epiverse-trace/cfr")
+#if(!require("pak")){install.packages("pak")}
+#pak::pak("epiverse-trace/cfr")
 library(cfr)
 
 # Load epiparameter
-pak::pak("epiverse-trace/epiparameter")
+#pak::pak("epiverse-trace/epiparameter")
 library(epiparameter)
 ```
 
@@ -43,6 +43,12 @@ In real-time, different data streams are available to calculate severity. The tw
 A key challenge when calculating severity is that in the middle of an outbreak, people may have recently been diagnosed with the disease, but not yet had an outcome, i.e. the delay from onset to death means it is not yet known whether they will recover or die. To calculate severity such as CFR = deaths/cases, we therefore need to consider deaths among those cases who have a known outcome (or we have estimated to have a known outcome), rather than all cases, to avoid underestimating the CFR.
 
 This document illustrates how to estimate the severity of disease depending on the type of data that is available to the user, using the `cfr` package, as well as other relevant packages, by including case studies that use real outbreak data.
+
+```{r, echo=FALSE, out.width="100%"}
+knitr::include_graphics('images/severity_data_sources.png')
+```
+
+<br>
 
 ### 1. From linelist with known outcomes
 
@@ -115,7 +121,7 @@ Based on a systematic review by [Nyakarahuka et al](https://bmcinfectdis.biomedc
 We can then estimate _p_ = tCFR/oCFR as
 
 ```{r}
-65/as.numeric(total_deaths/total_cases)
+65/as.numeric(total_MVD_deaths/total_MVD_cases)
 ```
 
 _XX Need to consider how to extract normal distribution from CFR (update epiparameter?) and propagate uncertainty XX _
@@ -184,7 +190,6 @@ ci_text(18,round(total_known_to_date))
 
 ```
 
-_XX Need to consider how `cfr` can use weeks as input rather than days XX _
 
 ### 3. From case and death timeseries
 
@@ -193,7 +198,7 @@ If we have the full incidence data for of cases and deaths available, we can als
 First, we load the development version of `EpiNow2`, which allows estimation of the proportion of infection events with a given characteristic (i.e. fatal outcome) at a given delay. We also define the Ebola onset-to-death using `epiparameter`:
 
 ```{r}
-pak::pak("epiforecasts/EpiNow2")
+#pak::pak("epiforecasts/EpiNow2")
 library(EpiNow2)
 
 onset_to_death_ebola <- epiparameter::epidist_db(
