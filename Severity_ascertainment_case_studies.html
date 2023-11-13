@@ -639,7 +639,8 @@ MVD_cases_deaths |&gt; filter(date_index&lt;cut_off)</code></pre>
 ## 71 2023-02-27     1      1</code></pre>
 <pre class="r"><code>known_outcomes_MVD &lt;- cfr::known_outcomes(MVD_cases_deaths, marburg_onset_death)
 
-# Calculate cases with known outcomes to date
+# Calculate cases with known outcomes to date n=20 vs 24 that appear in the linelist
+
 total_known_to_date &lt;- sum(known_outcomes_MVD$known_outcomes)</code></pre>
 <p>Comparing CFR calculated using the raw number of cases to date, and
 the number with known outcomes (i.e. adjusting for delays), we obtain
