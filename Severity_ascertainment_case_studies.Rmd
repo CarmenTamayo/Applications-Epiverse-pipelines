@@ -252,16 +252,19 @@ dt_ccfr_static_ebola <- cfr::cfr_static(
 
 # Fit with EpiNow2
 # Get parameters from epiparameter and format for EpiNow2
-param_ebola <- distributional::parameters(onset_to_death_ebola)
+param_ebola <- epiparameter::get_parameters(onset_to_death_ebola)
 
-onset_to_death_meansd <- epiparameter::gamma_shapescale2meansd(
+onset_to_death_meansd <- epiparameter::convert_params_to_summary_stats(
+   distribution = "gamma",
   shape = param_ebola[["shape"]],
   scale = param_ebola[["scale"]] 
 )
+
 onset_to_death_logmean <- EpiNow2::convert_to_logmean(
   mean = onset_to_death_meansd[["mean"]],
   sd = onset_to_death_meansd[["sd"]]
 )
+
 onset_to_death_logsd <- EpiNow2::convert_to_logsd(
   mean = onset_to_death_meansd[["mean"]], 
   sd = onset_to_death_meansd[["sd"]]
