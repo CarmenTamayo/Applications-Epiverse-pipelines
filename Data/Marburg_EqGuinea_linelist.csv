@@ -2,11 +2,11 @@
 1,confirmed,dead,2023-02-06,F,40-49,unknown,unknown
 2,confirmed,dead,2023-02-13,M,40-49,unknown,unknown
 3,confirmed,dead,2023-02-20,F,0-9,unknown,unknown
-4,confirmed,recovered,2023-03-05,M,40-49,unknown,HCW
-5,confirmed,dead,2023-03-05,F,40-49,unknown,HCW
-6,confirmed,dead,2023-03-05,F,40-49,unknown,HCW
-7,confirmed,dead,2023-03-05,F,30-39,unknown,unknown
-8,confirmed,recovered,2023-03-05,F,40-49,unknown,HCW
+4,confirmed,recovered,2023-03-06,M,40-49,unknown,HCW
+5,confirmed,dead,2023-03-06,F,40-49,unknown,HCW
+6,confirmed,dead,2023-03-06,F,40-49,unknown,HCW
+7,confirmed,dead,2023-03-06,F,30-39,unknown,unknown
+8,confirmed,recovered,2023-03-06,F,40-49,unknown,HCW
 9,confirmed,dead,2023-03-13,M,10-19,unknown,unknown
 10,confirmed,dead,2023-03-20,F,30-39,unknown,unknown
 11,confirmed,dead,2023-03-20,M,10-19,unknown,unknown
