@@ -151,7 +151,7 @@ cfr_overall <- cfr_static(daily_data, delay_density = function(x) density(onset_
 
 cfr_rolling <- cfr_rolling(daily_data, delay_density = function(x) density(onset_death_covid, x))
 
-ggplot(cfr_rolling) +
+plot_reconstructed_inc <- ggplot(cfr_rolling) +
   geom_ribbon(
     aes(x = date, ymin = severity_low, ymax = severity_high),
     alpha = 0.5, fill = "deepskyblue3") + 
@@ -172,7 +172,7 @@ cfr_static(data_for_cfr, delay_density = function(x) density(onset_death_covid, 
 
 cfr_rolling_linelist <- cfr_rolling(data_for_cfr, delay_density = function(x) density(onset_death_covid, x))
 
-ggplot(cfr_rolling_linelist) +
+plot_from_linelist <- ggplot(cfr_rolling_linelist) +
   geom_ribbon(
     aes(x = date, ymin = severity_low, ymax = severity_high),
     alpha = 0.5, fill = "deepskyblue3") + 
@@ -198,7 +198,7 @@ cfr_static(from_weekly_inc, delay_density = function(x) density(onset_death_covi
 
 cfr_rolling_from_weekly <- cfr_rolling(from_weekly_inc, delay_density = function(x) density(onset_death_covid, x))
 
-ggplot(cfr_rolling_from_weekly) +
+plot_from_weekly <- ggplot(cfr_rolling_from_weekly) +
   geom_ribbon(
     aes(x = date, ymin = severity_low, ymax = severity_high),
     alpha = 0.5, fill = "deepskyblue3") + 
@@ -209,7 +209,9 @@ ggplot(cfr_rolling_from_weekly) +
   labs(x = "Date", y = "CFR"
   ) + theme_bw()
 
-
+library(gridExtra)
+grid.arrange(plot_reconstructed_inc, plot_from_linelist, plot_from_weekly, nrow = 1, 
+             top = "1- From reconstructed daily incidence; 2- From linelist; 3- From cases grouped on weekday 1")
 
 ###### Using simulist ##### (pending fixing bugs)
 
